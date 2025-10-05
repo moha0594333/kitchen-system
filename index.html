@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة إعاشة الدوام</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .date-time {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .sync-status {
+            display: inline-block;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .sync-status.connected {
+            background: rgba(40, 167, 69, 0.3);
+        }
+        
+        .sync-status.disconnected {
+            background: rgba(220, 53, 69, 0.3);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .item-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-right: 4px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item-card.high { border-color: #28a745; }
+        .item-card.medium { border-color: #ffc107; }
+        .item-card.low { border-color: #dc3545; }
+        
+        .item-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #212529;
+        }
+        
+        .item-info p {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .item-quantity {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .meal-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+        
+        .meal-card h3 {
+            color: #212529;
+            margin-bottom: 10px;
+        }
+        
+        .meal-card .meal-date {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .meal-items {
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #212529;
+        }
+        
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .ingredient-item input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-group button {
+            flex: 1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>نظام إدارة إعاشة الدوام</h1>
+            <div class="date-time" id="currentDateTime"></div>
+            <div class="sync-status" id="syncStatus">جاري الاتصال...</div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('warehouse')">المستودع</button>
+            <button class="nav-tab" onclick="switchTab('meal')">تسجيل وجبة</button>
+            <button class="nav-tab" onclick="switchTab('history')">السجل</button>
+            <button class="nav-tab" onclick="switchTab('manage')">الإدارة</button>
+        </div>
+        
+        <div id="warehouse" class="tab-content active">
+            <div class="loading" id="warehouseLoading">
+                <div class="spinner"></div>
+                <p>جاري تحميل المستودع...</p>
+            </div>
+            <div id="warehouseContent" style="display: none;">
+                <div class="search-box">
+                    <input type="text" id="searchWarehouse" placeholder="ابحث عن صنف..." onkeyup="filterWarehouse()">
+                </div>
+                <div id="warehouseList"></div>
+            </div>
+        </div>
+        
+        <div id="meal" class="tab-content">
+            <div class="form-group">
+                <label>اسم الوجبة</label>
+                <input type="text" id="mealName" placeholder="مثال: فطور - فول وبيض">
+            </div>
+            
+            <div class="form-group">
+                <label>ملاحظات (اختياري)</label>
+                <input type="text" id="mealNotes" placeholder="مثال: عدد العمال 15">
+            </div>
+            
+            <button class="btn btn-primary" onclick="openIngredientSelector()">اختيار المكونات</button>
+            
+            <div id="selectedIngredients"></div>
+            
+            <button class="btn btn-success" onclick="saveMeal()" style="margin-top: 20px;">حفظ الوجبة</button>
+        </div>
+        
+        <div id="history" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMeals">0</div>
+                    <div class="stat-label">إجمالي الوجبات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="todayMeals">0</div>
+                    <div class="stat-label">وجبات اليوم</div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchHistory" placeholder="ابحث في السجل..." onkeyup="filterHistory()">
+            </div>
+            
+            <div id="historyList"></div>
+        </div>
+        
+        <div id="manage" class="tab-content">
+            <div id="manageAuth">
+                <div class="form-group">
+                    <label>كلمة السر</label>
+                    <input type="password" id="adminPassword" placeholder="أدخل كلمة السر">
+                </div>
+                <button class="btn btn-primary" onclick="checkAdminPassword()">دخول</button>
+                <p style="margin-top: 15px; color: #6c757d; font-size: 14px;">
+                    كلمة السر الافتراضية: <strong>1234</strong><br>
+                    (يمكنك تغييرها من الإعدادات)
+                </p>
+            </div>
+            
+            <div id="managePanel" style="display: none;">
+                <button class="btn btn-primary" onclick="openAddItemModal()">إضافة صنف جديد</button>
+                <button class="btn btn-primary" onclick="openAddStockModal()">إضافة كمية للمستودع</button>
+                <button class="btn btn-primary" onclick="openSettingsModal()">الإعدادات</button>
+                <button class="btn btn-danger" onclick="logout()">تسجيل الخروج</button>
+                
+                <h3 style="margin: 20px 0 10px 0;">إدارة الأصناف</h3>
+                <div id="manageItemsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="ingredientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">اختيار المكونات</div>
+            <div class="search-box">
+                <input type="text" id="searchIngredients" placeholder="ابحث..." onkeyup="filterIngredients()">
+            </div>
+            <div id="ingredientsList"></div>
+            <button class="btn btn-success" onclick="closeIngredientSelector()">تأكيد</button>
+        </div>
+    </div>
+    
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">إضافة صنف جديد</div>
+            <div class="form-group">
+                <label>اسم الصنف</label>
+                <input type="text" id="newItemName">
+            </div>
+            <div class="form-group">
+                <label>وحدة القياس</label>
+                <select id="newItemUnit">
+                    <option value="حبة">حبة</option>
+                    <option value="كوب">كوب</option>
+                    <option value="علبة">علبة</option>
+                    <option value="رول">رول</option>
+                    <option value="كيلو">كيلو</option>
+                    <option value="لتر">لتر</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الكمية الأولية</label>
+                <input type="number" id="newItemQuantity" value="0">
+            </div>
+            <div class="form-group">
+                <label>الحد الأدنى للتنبيه</label>
+                <input type="number" id="newItemMinimum" value="5">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="addNewItem()">إضافة</button>
+                <button class="btn btn-danger" onclick="closeAddItemModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="addStockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">إضافة كمية للمستودع</div>
+            <div class="form-group">
+                <label>اختر الصنف</label>
+                <select id="stockItemSelect"></select>
+            </div>
+            <div class="form-group">
+                <label>الكمية المضافة</label>
+                <input type="number" id="stockQuantity" value="1" min="1">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="addStock()">إضافة</button>
+                <button class="btn btn-danger" onclick="closeAddStockModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">الإعدادات</div>
+            <div class="form-group">
+                <label>تغيير كلمة السر</label>
+                <input type="password" id="newPassword" placeholder="كلمة السر الجديدة">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="changePassword()">حفظ</button>
+                <button class="btn btn-danger" onclick="closeSettingsModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, query, orderBy, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD73Cu-4fFWLXzNV42RiIotvyuw80a1FTw",
+            authDomain: "mohammed-188a2.firebaseapp.com",
+            projectId: "mohammed-188a2",
+            storageBucket: "mohammed-188a2.firebasestorage.app",
+            messagingSenderId: "413871635797",
+            appId: "1:413871635797:web:5f88c9ee37801abf1583dc"
+        };
+
+        let app, db;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            document.getElementById('syncStatus').textContent = 'خطأ في الاتصال';
+            document.getElementById('syncStatus').className = 'sync-status disconnected';
+        }
+
+        window.db = db;
+        window.inventory = {};
+        window.meals = [];
+        window.selectedMealIngredients = {};
+        window.adminPassword = '1234';
+        window.isAdminLoggedIn = false;
+        window.unsubscribeInventory = null;
+        window.unsubscribeMeals = null;
+
+        async function initializeFirebase() {
+            try {
+                console.log('Starting Firebase initialization...');
+                
+                const settingsDoc = await getDoc(doc(db, 'settings', 'admin'));
+                if (settingsDoc.exists()) {
+                    window.adminPassword = settingsDoc.data().password || '1234';
+                } else {
+                    await setDoc(doc(db, 'settings', 'admin'), { password: '1234' });
+                }
+
+                const inventorySnapshot = await getDocs(collection(db, 'inventory'));
+                if (inventorySnapshot.empty) {
+                    console.log('Initializing default inventory...');
+                    await initializeDefaultInventory();
+                }
+
+                subscribeToInventory();
+                subscribeToMeals();
+                
+                updateSyncStatus(true);
+                console.log('Firebase initialization complete');
+            } catch (error) {
+                console.error('خطأ في الاتصال:', error);
+                updateSyncStatus(false);
+                document.getElementById('warehouseLoading').innerHTML = `
+                    <div class="alert alert-danger">
+                        حدث خطأ في الاتصال بالخادم<br>
+                        ${error.message}<br>
+                        تحقق من الإنترنت وأعد المحاولة
+                    </div>
+                `;
+            }
+        }
+
+        async function initializeDefaultInventory() {
+            const defaultItems = {
+                'بيض': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'دجاج': { quantity: 0, unit: 'حبة', minimum: 5 },
+                'رز': { quantity: 0, unit: 'كوب', minimum: 20 },
+                'قشطة المراعي': { quantity: 0, unit: 'حبة', minimum: 5 },
+                'حليب المراعي': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'لبن المراعي': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'شطة رنا': { quantity: 0, unit: 'حبة', minimum: 3 },
+                'شطة سومطرا': { quantity: 0, unit: 'حبة', minimum: 3 },
+                'بيبسي': { quantity: 0, unit: 'حبة', minimum: 12 },
+                'خبز بقالة': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'خبز حار': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'زيت': { quantity: 0, unit: 'علبة', minimum: 2 },
+                'ورق قصدير': { quantity: 0, unit: 'رول', minimum: 2 },
+                'كاسات شاي': { quantity: 0, unit: 'حبة', minimum: 20 },
+                'فول': { quantity: 0, unit: 'علبة', minimum: 5 },
+                'زبادي': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'حليب أبو قوس': { quantity: 0, unit: 'حبة', minimum: 5 },
+                'جبن كيري': { quantity: 0, unit: 'حبة', minimum: 5 },
+                'طحينية': { quantity: 0, unit: 'حبة', minimum: 2 },
+                'كاسات قهوة': { quantity: 0, unit: 'حبة', minimum: 20 },
+                'مناديل رول': { quantity: 0, unit: 'حبة', minimum: 5 },
+                'فيري': { quantity: 0, unit: 'حبة', minimum: 2 },
+                'سفرة': { quantity: 0, unit: 'حبة', minimum: 10 },
+                'سفن اب': { quantity: 0, unit: 'حبة', minimum: 12 },
+                'حمضيات': { quantity: 0, unit: 'حبة', minimum: 12 },
+                'أكواب شاي': { quantity: 0, unit: 'حبة', minimum: 20 }
+            };
+
+            for (const [name, data] of Object.entries(defaultItems)) {
+                await setDoc(doc(db, 'inventory', name), data);
+            }
+        }
+
+        function subscribeToInventory() {
+            if (window.unsubscribeInventory) {
+                window.unsubscribeInventory();
+            }
+
+            window.unsubscribeInventory = onSnapshot(
+                collection(db, 'inventory'), 
+                (snapshot) => {
+                    window.inventory = {};
+                    snapshot.forEach((doc) => {
+                        window.inventory[doc.id] = doc.data();
+                    });
+                    displayWarehouse();
+                    document.getElementById('warehouseLoading').style.display = 'none';
+                    document.getElementById('warehouseContent').style.display = 'block';
+                }, 
+                (error) => {
+                    console.error('خطأ في الاشتراك:', error);
+                    updateSyncStatus(false);
+                }
+            );
+        }
+
+        function subscribeToMeals() {
+            if (window.unsubscribeMeals) {
+                window.unsubscribeMeals();
+            }
+
+            const mealsQuery = query(collection(db, 'meals'), orderBy('timestamp', 'desc'));
+            window.unsubscribeMeals = onSnapshot(mealsQuery, (snapshot) => {
+                window.meals = [];
+                snapshot.forEach((doc) => {
+                    window.meals.push({ id: doc.id, ...doc.data() });
+                });
+                displayHistory();
+            });
+        }
+
+        function updateSyncStatus(connected) {
+            const statusEl = document.getElementById('syncStatus');
+            if (connected) {
+                statusEl.textContent = 'متصل';
+                statusEl.className = 'sync-status connected';
+            } else {
+                statusEl.textContent = 'غير متصل';
+                statusEl.className = 'sync-status disconnected';
+            }
+        }
+
+        window.updateDateTime = function() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Riyadh'
+            };
+            
+            const arabicDate = now.toLocaleDateString('ar-SA', options);
+            const hijriDate = now.toLocaleDateString('ar-SA-u-ca-islamic', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                timeZone: 'Asia/Riyadh'
+            });
+            
+            document.getElementById('currentDateTime').innerHTML = `${arabicDate}<br>${hijriDate}`;
+        };
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'warehouse') displayWarehouse();
+            if (tabName === 'history') displayHistory();
+            if (tabName === 'manage') displayManageItems();
+        };
+
+        window.displayWarehouse = function() {
+            const container = document.getElementById('warehouseList');
+            container.innerHTML = '';
+            
+            let hasLowStock = false;
+            let alertHtml = '';
+            
+            for (const [name, item] of Object.entries(window.inventory)) {
+                const status = item.quantity > item.minimum ? 'high' : 
+                              item.quantity > item.minimum * 0.5 ? 'medium' : 'low';
+                
+                if (status === 'low') {
+                    hasLowStock = true;
+                    alertHtml += `${name}: ${item.quantity} ${item.unit}<br>`;
+                }
+                
+                container.innerHTML += `
+                    <div class="item-card ${status}" data-name="${name}">
+                        <div class="item-info">
+                            <h3>${name}</h3>
+                            <p>الوحدة: ${item.unit} | الحد الأدنى: ${item.minimum}</p>
+                        </div>
+                        <div class="item-quantity">${item.quantity}</div>
+                    </div>
+                `;
+            }
+            
+            if (hasLowStock) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        تنبيه: أصناف منخفضة<br>
+                        ${alertHtml}
+                    </div>
+                ` + container.innerHTML;
+            }
+        };
+
+        window.filterWarehouse = function() {
+            const search = document.getElementById('searchWarehouse').value.toLowerCase();
+            document.querySelectorAll('#warehouseList .item-card').forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(search) ? 'flex' : 'none';
+            });
+        };
+
+        window.openIngredientSelector = function() {
+            document.getElementById('ingredientModal').style.display = 'block';
+            displayIngredientsList();
+        };
+
+        window.displayIngredientsList = function() {
+            const container = document.getElementById('ingredientsList');
+            container.innerHTML = '';
+            
+            for (const [name, item] of Object.entries(window.inventory)) {
+                const currentQty = window.selectedMealIngredients[name] || 0;
+                container.innerHTML += `
+                    <div class="ingredient-item" data-name="${name}">
+                        <span>${name} (${item.unit})</span>
+                        <input type="number" 
+                               value="${currentQty}" 
+                               min="0" 
+                               max="${item.quantity}"
+                               onchange="updateSelectedIngredient('${name}', this.value)">
+                    </div>
+                `;
+            }
+        };
+
+        window.updateSelectedIngredient = function(name, quantity) {
+            quantity = parseInt(quantity) || 0;
+            if (quantity > 0) {
+                window.selectedMealIngredients[name] = quantity;
+            } else {
+                delete window.selectedMealIngredients[name];
+            }
+            displaySelectedIngredients();
+        };
+
+        window.displaySelectedIngredients = function() {
+            const container = document.getElementById('selectedIngredients');
+            if (Object.keys(window.selectedMealIngredients).length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '<h3 style="margin: 20px 0 10px 0;">المكونات المختارة:</h3>';
+            for (const [name, qty] of Object.entries(window.selectedMealIngredients)) {
+                html += `
+                    <div class="ingredient-item">
+                        <span>${name}</span>
+                        <span>${qty} ${window.inventory[name].unit}</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        };
+
+        window.filterIngredients = function() {
+            const search = document.getElementById('searchIngredients').value.toLowerCase();
+            document.querySelectorAll('#ingredientsList .ingredient-item').forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                item.style.display = name.includes(search) ? 'flex' : 'none';
+            });
+        };
+
+        window.closeIngredientSelector = function() {
+            document.getElementById('ingredientModal').style.display = 'none';
+            displaySelectedIngredients();
+        };
+
+        window.saveMeal = async function() {
+            const mealName = document.getElementById('mealName').value.trim();
+            const mealNotes = document.getElementById('mealNotes').value.trim();
+            
+            if (!mealName) {
+                alert('الرجاء إدخال اسم الوجبة');
+                return;
+            }
+            
+            if (Object.keys(window.selectedMealIngredients).length === 0) {
+                alert('الرجاء اختيار المكونات');
+                return;
+            }
+            
+            for (const [name, qty] of Object.entries(window.selectedMealIngredients)) {
+                if (window.inventory[name].quantity < qty) {
+                    alert(`الكمية المتوفرة من ${name} غير كافية`);
+                    return;
+                }
+            }
+            
+            try {
+                for (const [name, qty] of Object.entries(window.selectedMealIngredients)) {
+                    const newQty = window.inventory[name].quantity - qty;
+                    await updateDoc(doc(db, 'inventory', name), { quantity: newQty });
+                }
+                
+                const now = new Date();
+                await addDoc(collection(db, 'meals'), {
+                    name: mealName,
+                    notes: mealNotes,
+                    ingredients: {...window.selectedMealIngredients},
+                    timestamp: now.getTime(),
+                    dateString: now.toLocaleDateString('ar-SA', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'Asia/Riyadh'
+                    })
+                });
+                
+                document.getElementById('mealName').value = '';
+                document.getElementById('mealNotes').value = '';
+                window.selectedMealIngredients = {};
+                displaySelectedIngredients();
+                
+                alert('تم حفظ الوجبة بنجاح');
+            } catch (error) {
+                console.error('خطأ في حفظ الوجبة:', error);
+                alert('حدث خطأ في حفظ الوجبة: ' + error.message);
+            }
+        };
+
+        window.displayHistory = function() {
+            const container = document.getElementById('historyList');
+            
+            if (window.meals.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>لا توجد وجبات مسجلة</p>
+                    </div>
+                `;
+                document.getElementById('totalMeals').textContent = '0';
+                document.getElementById('todayMeals').textContent = '0';
+                return;
+            }
+            
+            const today = new Date().toLocaleDateString('ar-SA', {timeZone: 'Asia/Riyadh'});
+            const todayMeals = window.meals.filter(m => 
+                new Date(m.timestamp).toLocaleDateString('ar-SA', {timeZone: 'Asia/Riyadh'}) === today
+            ).length;
+            
+            document.getElementById('totalMeals').textContent = window.meals.length;
+            document.getElementById('todayMeals').textContent = todayMeals;
+            
+            container.innerHTML = '';
+            
+            for (const meal of window.meals) {
+                let ingredientsHtml = '';
+                for (const [name, qty] of Object.entries(meal.ingredients)) {
+                    const unit = window.inventory[name]?.unit || '';
+                    ingredientsHtml += `${name}: ${qty} ${unit}<br>`;
+                }
+                
+                container.innerHTML += `
+                    <div class="meal-card" data-name="${meal.name}">
+                        <h3>${meal.name}</h3>
+                        <div class="meal-date">${meal.dateString}</div>
+                        ${meal.notes ? `<p style="margin-bottom: 10px;"><strong>ملاحظات:</strong> ${meal.notes}</p>` : ''}
+                        <div class="meal-items">${ingredientsHtml}</div>
+                    </div>
+                `;
+            }
+        };
+
+        window.filterHistory = function() {
+            const search = document.getElementById('searchHistory').value.toLowerCase();
+            document.querySelectorAll('#historyList .meal-card').forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(search) ? 'block' : 'none';
+            });
+        };
+
+        window.checkAdminPassword = function() {
+            const input = document.getElementById('adminPassword').value;
+            if (input === window.adminPassword) {
+                window.isAdminLoggedIn = true;
+                document.getElementById('manageAuth').style.display = 'none';
+                document.getElementById('managePanel').style.display = 'block';
+                displayManageItems();
+            } else {
+                alert('كلمة السر غير صحيحة');
+            }
+        };
+
+        window.logout = function() {
+            window.isAdminLoggedIn = false;
+            document.getElementById('manageAuth').style.display = 'block';
+            document.getElementById('managePanel').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        };
+
+        window.displayManageItems = function() {
+            if (!window.isAdminLoggedIn) return;
+            
+            const container = document.getElementById('manageItemsList');
+            container.innerHTML = '';
+            
+            for (const [name, item] of Object.entries(window.inventory)) {
+                container.innerHTML += `
+                    <div class="item-card high">
+                        <div class="item-info">
+                            <h3>${name}</h3>
+                            <p>${item.quantity} ${item.unit} | الحد الأدنى: ${item.minimum}</p>
+                        </div>
+                        <button class="btn btn-danger" style="width: auto; padding: 8px 15px; margin: 0;" 
+                                onclick="deleteItem('${name}')">حذف</button>
+                    </div>
+                `;
+            }
+        };
+
+        window.openAddItemModal = function() {
+            document.getElementById('addItemModal').style.display = 'block';
+        };
+
+        window.closeAddItemModal = function() {
+            document.getElementById('addItemModal').style.display = 'none';
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemQuantity').value = '0';
+            document.getElementById('newItemMinimum').value = '5';
+        };
+
+        window.addNewItem = async function() {
+            const name = document.getElementById('newItemName').value.trim();
+            const unit = document.getElementById('newItemUnit').value;
+            const quantity = parseInt(document.getElementById('newItemQuantity').value) || 0;
+            const minimum = parseInt(document.getElementById('newItemMinimum').value) || 5;
+            
+            if (!name) {
+                alert('الرجاء إدخال اسم الصنف');
+                return;
+            }
+            
+            if (window.inventory[name]) {
+                alert('هذا الصنف موجود مسبقاً');
+                return;
+            }
+            
+            try {
+                await setDoc(doc(db, 'inventory', name), { quantity, unit, minimum });
+                closeAddItemModal();
+                alert('تم إضافة الصنف بنجاح');
+            } catch (error) {
+                console.error('خطأ في الإضافة:', error);
+                alert('حدث خطأ في إضافة الصنف: ' + error.message);
+            }
+        };
+
+        window.deleteItem = async function(name) {
+            if (confirm(`هل أنت متأكد من حذف "${name}"؟`)) {
+                try {
+                    await deleteDoc(doc(db, 'inventory', name));
+                    alert('تم حذف الصنف');
+                } catch (error) {
+                    console.error('خطأ في الحذف:', error);
+                    alert('حدث خطأ في حذف الصنف: ' + error.message);
+                }
+            }
+        };
+
+        window.openAddStockModal = function() {
+            const select = document.getElementById('stockItemSelect');
+            select.innerHTML = '';
+            
+            for (const name of Object.keys(window.inventory)) {
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+            }
+            
+            document.getElementById('addStockModal').style.display = 'block';
+        };
+
+        window.closeAddStockModal = function() {
+            document.getElementById('addStockModal').style.display = 'none';
+            document.getElementById('stockQuantity').value = '1';
+        };
+
+        window.addStock = async function() {
+            const name = document.getElementById('stockItemSelect').value;
+            const quantity = parseInt(document.getElementById('stockQuantity').value) || 0;
+            
+            if (quantity <= 0) {
+                alert('الرجاء إدخال كمية صحيحة');
+                return;
+            }
+            
+            try {
+                const newQty = window.inventory[name].quantity + quantity;
+                await updateDoc(doc(db, 'inventory', name), { quantity: newQty });
+                closeAddStockModal();
+                alert(`تم إضافة ${quantity} ${window.inventory[name].unit} من ${name}`);
+            } catch (error) {
+                console.error('خطأ في الإضافة:', error);
+                alert('حدث خطأ في إضافة الكمية: ' + error.message);
+            }
+        };
+
+        window.openSettingsModal = function() {
+            document.getElementById('settingsModal').style.display = 'block';
+        };
+
+        window.closeSettingsModal = function() {
+            document.getElementById('settingsModal').style.display = 'none';
+            document.getElementById('newPassword').value = '';
+        };
+
+        window.changePassword = async function() {
+            const newPass = document.getElementById('newPassword').value;
+            if (newPass.length < 4) {
+                alert('كلمة السر يجب أن تكون 4 أحرف على الأقل');
+                return;
+            }
+            
+            try {
+                await setDoc(doc(db, 'settings', 'admin'), { password: newPass });
+                window.adminPassword = newPass;
+                closeSettingsModal();
+                alert('تم تغيير كلمة السر بنجاح');
+            } catch (error) {
+                console.error('خطأ في تغيير كلمة السر:', error);
+                alert('حدث خطأ في تغيير كلمة السر: ' + error.message);
+            }
+        };
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+
+        setTimeout(() => {
+            initializeFirebase();
+        }, 1000);
+        
+        window.updateDateTime();
+        setInterval(window.updateDateTime, 60000);
+    </script>
+</body>
+</html>
